@@ -1,0 +1,160 @@
+// 2017 by Daniel Eichhorn, https://blog.squix.org
+// Inspired by https://gist.github.com/bmcbride/7069aebd643944c9ee8b
+// Create or open an existing Sheet and click Tools > Script editor and enter the code below
+// 1. Enter sheet name where data is to be written below
+
+var SHEET1 = "Sheet1";
+var SHEET2 = "Sheet2";
+
+// 2. Save. Run > setup
+// 3. Publish > Deploy as web app
+//    - enter Project Version name and click 'Save New Version'
+//    - set security level and enable service (most likely execute as 'me' and access 'anyone, even anonymously)
+// 4. Copy the 'Current web app URL' and post this in your form/script action
+
+var SCRIPT_PROP = PropertiesService.getScriptProperties(); // new property service
+
+// https://github.com/peterherrmann/BetterLog
+// Note that the logs will be in a second tab, not the main sheet!
+// Make sure the 'debug-logging-google-spreadsheet' is write by everyone etc.
+// put it here to make it global
+// Logger = BetterLog.useSpreadsheet('1A69ebTrrdCOTvRgt-FyH8d0Jd42KkeDNpWNZXnKh_Yk'); // 'debug' G.S 
+// 2017 by Daniel Eichhorn, https://blog.squix.org
+// Inspired by https://gist.github.com/bmcbride/7069aebd643944c9ee8b
+// Create or open an existing Sheet and click Tools > Script editor and enter the code below
+// 1. Enter sheet name where data is to be written below
+
+var SHEET1 = "Sheet1";
+var SHEET2 = "Sheet2";
+
+// 2. Save. Run > setup
+// 3. Publish > Deploy as web app
+//    - enter Project Version name and click 'Save New Version'
+//    - set security level and enable service (most likely execute as 'me' and access 'anyone, even anonymously)
+// 4. Copy the 'Current web app URL' and post this in your form/script action
+
+var SCRIPT_PROP = PropertiesService.getScriptProperties(); // new property service
+
+// https://github.com/peterherrmann/BetterLog
+// Note that the logs will be in a second tab, not the main sheet!
+// Make sure the 'debug-logging-google-spreadsheet' is write by everyone etc.
+// put it here to make it global
+// Logger = BetterLog.useSpreadsheet('1A69ebTrrdCOTvRgt-FyH8d0Jd42KkeDNpWNZXnKh_Yk'); // 'debug' G.S 
+// Logger.log('something');
+
+// If you don't want to expose either GET or POST methods you can comment out the appropriate function
+// NOTE: If there are any new edits to the code, then that means you have to make a new Deployment 
+// Then add the New URL to The Things Network on the Google Sheets webhook so the information can be added, 
+// as well with any updates 
+// Research Little Endian and Big Endian, which are ways how the data are interpreted 
+// Ex: Temperature can be in C or in another another that can't be interpreted and in Big or Little Endian formats 
+// Therefore it needs to be converted into a way that can be interpreted by us 
+
+function doGet(e){
+  return handleResponse(e);
+}
+
+function doPost(e){
+  return handleResponse(e);
+}
+
+function handleResponse(e) { 
+  var lock = LockService.getPublicLock();
+  lock.waitLock(60000); // wait 30 seconds before conceding defeat.
+  
+  //Logger = BetterLog.useSpreadsheet('1A69ebTrrdCOTvRgt-FyH8d0Jd42KkeDNpWNZXnKh_Yk'); // 'debug' G.S 
+  //Logger.log(doc.getCurrentCell().getRow()); 
+  
+  try { 
+// next set where we write the data - you could write to multiple/alternate destinations
+    var doc = SpreadsheetApp.openById(SCRIPT_PROP.getProperty("GSS_ID"));
+    
+    var jsonData = JSON.parse(e.postData.contents);
+        
+/*    switch (jsonData.end_device_ids.device_id) {
+      case 'fn-10005' : 
+        var sheet = doc.getSheetByName(SHEET1);
+        break;
+      case 'fn-10006' : 
+        var sheet = doc.getSheetByName(SHEET2);
+        break;
+      default: var sheet = 'no sheet';
+    } */
+
+    var sheet = doc.getSheetByName('Sheet1');
+        
+    // we'll assume header is in row 1 but you can override with header_row in GET/POST data
+    //var headers = sheet.getRange(1, 1, 1, sheet.getLastColumn()).getValues()[0];
+    var nextRow = sheet.getLastRow()+1; // get next row
+    var row = [];
+    var headerRow = [];
+    var d = new Date(); 
+    dformat = [d.getFullYear(), d.getMonth() + 1, d.getDate()].join(' / ') + ' ' + [d.getHours(), d.getMinutes(), d.getSeconds()].join (' : '); // Time and Date updated, to a more appropriate and useful format 
+
+// loop through the header columns
+// loops through each row to fill each column with its appropriate information 
+
+    headerRow.push("Device_Name");
+    headerRow.push("Application_Name");
+    headerRow.push("Time_Received");
+    headerRow.push("Local Time"); 
+    headerRow.push("f_cnt");
+    headerRow.push("temperature");
+    headerRow.push("pressure");
+    headerRow.push("humidity");
+    headerRow.push("batteryVoltage");
+
+            
+    for (var i = 0; i < jsonData.uplink_message.rx_metadata.length; i++) {
+      headerRow.push("rx_metadata.gateway_ids.gtw_id");
+      headerRow.push("rx_metadata.time");
+      headerRow.push("rx_metadata.rssi");
+      headerRow.push("rx_metadata.snr");
+    }
+
+    sheet.getRange(1, 1, 1, headerRow.length).setValues([headerRow]); 
+    
+    // push adds elements to the end of the array 
+    row.push(jsonData.end_device_ids.device_id);
+    row.push(jsonData.end_device_ids.application_ids.application_id);
+    //row.push(new Date(jsonData.received_at).toUTCString());
+    row.push(jsonData.received_at);
+    row.push(d); //New Date format /
+    row.push(jsonData.uplink_message.f_cnt);
+    row.push(jsonData.uplink_message.decoded_payload.temperature);
+    row.push(jsonData.uplink_message.decoded_payload.pressure);
+    row.push(jsonData.uplink_message.decoded_payload.humidity);
+    row.push(jsonData.uplink_message.decoded_payload.batteryVoltage);
+ 
+    for (var i = 0; i < jsonData.uplink_message.rx_metadata.length; i++) {
+      var gateway = jsonData.uplink_message.rx_metadata[i];
+      row.push(gateway.gateway_ids.gateway_id);
+      row.push(gateway.time);
+      row.push(gateway.rssi);
+      row.push(gateway.snr);
+    }
+
+// more efficient to set values as [][] array than individually
+    sheet.getRange(nextRow, 1, 1, row.length).setValues([row]);
+
+//  Logger.log('5');
+
+// return json success results
+    return ContentService
+    .createTextOutput(JSON.stringify({"result":"success", "row": nextRow}))
+    .setMimeType(ContentService.MimeType.JSON);
+  } catch(e) {
+// if error return this
+    return ContentService
+    .createTextOutput(JSON.stringify({"result":"error", "error": e}))
+    .setMimeType(ContentService.MimeType.JSON);
+  } finally { //release lock
+    lock.releaseLock();
+  }
+}
+
+function setup() {
+  var doc = SpreadsheetApp.getActiveSpreadsheet();
+  SCRIPT_PROP.setProperty("GSS_ID", doc.getId());
+  //Google Spread Sheet ID 
+}
