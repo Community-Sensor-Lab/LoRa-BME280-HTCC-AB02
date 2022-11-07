@@ -1,5 +1,3 @@
-tts_htcc-ab02_bme280_payloadformater.js 
-
 // decoder variable contains Error Flags followed by Battery and sensor data.
 function Decoder(b, port) {
   var decoded = {};
