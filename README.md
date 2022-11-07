@@ -18,9 +18,13 @@ Creation of the LoRaWan Spreadsheet. The spreadsheet was programmed using AppsSc
 Creation of the bretboard, schematic, and PCB board using Fritzing software. 
 ## Hardware Parts: 
 BME280 Sensor: Sensor that measures T, hPa, and P 
+
 HTCC-AB02: Board that connects sensors, radio, and battery 
+
 Battery: One method of powering board and sensors 
+
 Solar Panel: Other method of powering board and sensors 
+
 Antennae: Helps send the information gathered to The Things Network 
 
 
