@@ -2,9 +2,9 @@
 
 Heltec HTCC-AB02 LoRaWAN with two BME280 for Rooftop Material Analysis with Architecture 
 
-Welcome. This page is still being built at the moment. We will try to answer any questions given to us. Above are the code that are used. 
-<br> 
+Welcome. 
 
+Make it more precise. Good reference if you are going to redo the project in a couple years. 
 ## Content: 
 
 The BME 280 is sensors capable of measuring **TEMPERATURE**, **HUMIDITY**, and **BAROMETRIC PRESSURE**. 
