@@ -30,6 +30,7 @@ Creation of the bretboard, schematic, and PCB board using Fritzing software.
 ![IMG_5879 (1)](https://user-images.githubusercontent.com/19189152/200358666-001eae0a-c64b-4593-bc46-24464a87c1a0.jpeg)
 **Above**: Image of the HTCC-AB02, with the BME280, battery, and antennae connected. 
 
+
 ## Diagram: 
 This is the diagram of the HTCC-AB02 connected to the BME280 sensor. Diagram was built using Fritzing software: 
 ![BME280Fritzing](https://user-images.githubusercontent.com/19189152/200355749-81b0526c-638a-4737-a1f7-40e12526b8f6.jpg) 
