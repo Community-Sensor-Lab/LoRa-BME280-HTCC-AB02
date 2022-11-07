@@ -37,5 +37,3 @@ Antennae: Helps send the information gathered to The Things Network
 ## Diagram: 
 This is the diagram of the HTCC-AB02 connected to the BME280 sensor. Diagram was built using Fritzing software: 
 ![BME280Fritzing](https://user-images.githubusercontent.com/19189152/200355749-81b0526c-638a-4737-a1f7-40e12526b8f6.jpg) 
-
-[HTCC-AB02_PinoutDiagram.pdf](https://github.com/Community-Sensor-Lab/LoRa-BME280-HTCC-AB02/files/9953972/HTCC-AB02_PinoutDiagram.pdf)
