@@ -13,9 +13,12 @@ function Decoder(b, port) {
   });
 
   decoded.temperature = view.getFloat32(0, true); //true is to convert it to little Endian
-  decoded.pressure = view.getFloat32(4, true);  //numbers are based on the puc 
-  decoded.humidity = view.getFloat32(8, true); 
-  decoded.batteryVoltage = view.getFloat32(12, true); 
-
-        return decoded; 
+  decoded.pressure = view.getFloat32(4, true);  //numbers are based on the puc
+  decoded.humidity = view.getFloat32(8, true);
+  decoded.batteryVoltage = view.getFloat32(12, true);
+  decoded.temperature2 = view.getFloat32(16, true);
+  decoded.pressure2 = view.getFloat32(20, true);
+  decoded.humidity2 = view.getFloat32(24, true);
+ 
+        return decoded;
 }
