@@ -1,11 +1,11 @@
 /*
  * Based on CubeCell example libraries
- * 
+ *
  * Heltec HTCC-AB02 and a BME280 TPRH sensor for Zihao Zhang at CCNY Architecture
  * Uses Adafruit's BME280 library as Seeed no good
- * 
+ *
  * rtoledocrow@gc.cuny.edu, Oct 2022
- * Two Sensors Edit by jasoncayetano01@gc.cuny.edu, Nov 2022 
+ * Two Sensors Edit by jasoncayetano01@gc.cuny.edu, Nov 2022
  */
 
 #include "LoRaWan_APP.h"
@@ -26,13 +26,13 @@
 /* OTAA para*/
 // For devEui the last two bytes are random.
 // For the rest see https://lora-developers.semtech.com/documentation/tech-papers-and-guides/the-book/deveui/
-uint8_t devEui[] = { 0xFE, 0xFF, 0xFF, 0xFF, 0xFD, 0xFF, 0x8D, 0x67 }; //rmtemp-167 same heltec piece for both sensors- just need one for both sensors 
+uint8_t devEui[] = { 0xFE, 0xFF, 0xFF, 0xFF, 0xFD, 0xFF, 0xXX, 0xXX }; //rmtemp-9c29 same heltec piece for both sensors- just need one for both sensors
 
 // aka joinEUI Use all 0x00 as described here: https://lora-developers.semtech.com/documentation/tech-papers-and-guides/the-book/joineui
-uint8_t appEui[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 }; 
+uint8_t appEui[] = { 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 
 // random from TTI website random
-uint8_t appKey[] = { 0x01, 0x63, 0x89, 0xC6, 0x1B, 0x97, 0xB0, 0x74, 0x4B, 0xD5, 0xF5, 0x32, 0xD9, 0x71, 0x2D, 0xAE}; 
+uint8_t appKey[] = { 0xXX, 0xE7, 0xEA, 0x4D, 0x19, 0x26, 0xD6, 0xBF, 0xF2, 0x9A, 0x23, 0x88, 0xB9, 0x10, 0xD5, 0xXX};
 
 /* ABP para*/
 uint8_t nwkSKey[] = { 0x15, 0xb1, 0xd0, 0xef, 0xa4, 0x63, 0xdf, 0xbe, 0x3d, 0x11, 0x18, 0x1e, 0x1e, 0xc7, 0xda, 0x85 };
@@ -88,11 +88,10 @@ uint8_t appPort = 2;
 uint8_t confirmedNbTrials = 4;
 
 /* Prepares the payload of the frame */
-Adafruit_BME280 bme280; // FIRST SENSOR 
-//Adafruit_BME280 bme1(0x76); //
-Adafruit_BME280 bme2; //SECOND SENSOR 
+Adafruit_BME280 bme280_1; // FIRST SENSOR Creation of object of type bme280 and calling the object bme280
+Adafruit_BME280 bme280_2; //SECOND SENSOR
 
-// unsigned long DelayTime; 
+// unsigned long DelayTime;
 
 static void prepareTxFrame( uint8_t port )
 {
@@ -106,9 +105,9 @@ static void prepareTxFrame( uint8_t port )
   pinMode(Vext, OUTPUT);
   digitalWrite(Vext, LOW); // turn Vext on
   delay(500); // wait for Vext to stabilize
-  bme280.begin(); 
+  bme280_1.begin(0x77);
   delay(500); // wait for begin. should actually test.
-/* 
+/*
  *   //float sealevelPressure = bme280.readSealevelPressure();
 
   // you can get a more precise measurement of altitude
@@ -117,32 +116,34 @@ static void prepareTxFrame( uint8_t port )
   // that is equal to 101500 Pascals.
   //    Serial.print("Real altitude = ");
   //    Serial.print(bme280.readAltitude(101500));
-  //    Serial.println(" meters"); 
+  //    Serial.println(" meters");
  */
-  float temperature = bme280.readTemperature();
-  float pressure = bme280.readPressure()/100.00;
-  float humidity = bme280.readHumidity();
+  float temperature = bme280_1.readTemperature();
+  float pressure = bme280_1.readPressure()/100.00;
+  float humidity = bme280_1.readHumidity();
+  // Wire.end();// turn off comms before power
+  // delay(2000); //Increased delay time
+  // digitalWrite(Vext, HIGH); // Vext off
+  // delay(2000);
+ 
+  // pinMode(Vext, OUTPUT); // Copy of the delay times for the second sensor
+  // digitalWrite(Vext, LOW); // turn Vext on
+  // delay(500);
+  bme280_2.begin(0x76);
+  delay(500); // Delay times are needed to avoid the second sensor to send incorrect data (T2 = 1000.95, etc.)
+  float temperature2 = bme280_2.readTemperature();
+  float pressure2 = bme280_2.readPressure()/100.00;
+  float humidity2 = bme280_2.readHumidity();
   Wire.end();// turn off comms before power
-  delay(2000); //Increased delay time 
+  // delay(2000); //Increased delay time
   digitalWrite(Vext, HIGH); // Vext off
-
-  pinMode(Vext, OUTPUT); // Copy of the delay times for the second sensor 
-  digitalWrite(Vext, LOW); // turn Vext on
-  delay(500); 
-  bme2.begin(); 
-  delay(500); // Delay times are needed to avoid the second sensor to send incorrect data (T2 = 1000.95, etc.) 
-  float temperature2 = bme2.readTemperature(); 
-  float pressure2 = bme2.readPressure()/100.00; 
-  float humidity2 = bme2.readHumidity(); 
-  Wire.end();// turn off comms before power
-  delay(2000); //Increased delay time 
-  digitalWrite(Vext, HIGH); // Vext off
-
+  // delay(2000);
+ 
   float batteryVoltage = getBatteryVoltage()/1000.00;
 
   unsigned char *puc;
   puc = (unsigned char *)(&temperature);
-  appDataSize = 28; // 28 instead of 16, as three more unsigned chars have been added 
+  appDataSize = 28; // 28 instead of 16, as three more unsigned chars have been added
   appData[0] = puc[0];
   appData[1] = puc[1];
   appData[2] = puc[2];
@@ -160,28 +161,28 @@ static void prepareTxFrame( uint8_t port )
   appData[10] = puc[2];
   appData[11] = puc[3];
 
-  puc = (unsigned char *)(&batteryVoltage); //just one is needed, as there is one power source at the moment 
+  puc = (unsigned char *)(&batteryVoltage); //just one is needed, as there is one power source at the moment
   appData[12] = puc[0];
   appData[13] = puc[1];
   appData[14] = puc[2];
   appData[15] = puc[3];
 
-  puc = (unsigned char*)(&temperature2); //temperature data from the second sensor 
+  puc = (unsigned char*)(&temperature2); //temperature data from the second sensor
   appData[16] = puc[0];
   appData[17] = puc[1];
   appData[18] = puc[2];
   appData[19] = puc[3];
 
-  puc = (unsigned char*)(&pressure2); //pressure data from second sensor 
+  puc = (unsigned char*)(&pressure2); //pressure data from second sensor
   appData[20] = puc[0];
   appData[21] = puc[1];
   appData[22] = puc[2];
-  appData[23] = puc[3]; 
+  appData[23] = puc[3];
 
-  puc = (unsigned char*)(&humidity2); //humidity data from second sensor 
+  puc = (unsigned char*)(&humidity2); //humidity data from second sensor
   appData[24] = puc[0];
   appData[25] = puc[1];
-  appData[26] = puc[2]; 
+  appData[26] = puc[2];
   appData[27] = puc[3];
 
   Serial.print(" T:");  Serial.print(temperature);
@@ -189,16 +190,16 @@ static void prepareTxFrame( uint8_t port )
   Serial.print(" H:"); Serial.print(humidity);
   Serial.print(" V:"); Serial.print(batteryVoltage);
 
-  Serial.print(" T2:"); Serial.print(temperature2); //Printing of second sensor data 
-  Serial.print(" P2:"); Serial.print(pressure2); //Printing of second sensor data 
-  Serial.print(" H2:"); Serial.print(humidity2); //Printing of second sensor data 
+  Serial.print(" T2:"); Serial.print(temperature2); //Printing of second sensor data
+  Serial.print(" P2:"); Serial.print(pressure2); //Printing of second sensor data
+  Serial.print(" H2:"); Serial.print(humidity2); //Printing of second sensor data
 
-  Serial.println(); 
+  Serial.println();
 }
 
 void setup() {
   Serial.begin(115200);
-  delay(3000); 
+  delay(3000);
   Serial.println(__FILE__);
 
 #if(AT_SUPPORT)
@@ -257,3 +258,4 @@ void loop()
       }
   }
 }
+
